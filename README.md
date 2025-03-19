@@ -81,26 +81,6 @@ This project is designed to generate short, engaging “Did You Know?” videos 
 
 ---
 
-## Directory Structure
-
-/viral_fact_videos
-│
-├── assets/
-│   ├── backgrounds/       # Local background video clips/images (optional)
-│   └── music/             # Background music files
-│
-├── output/                # Generated videos and logs
-│
-├── config.json            # Configuration file (parameters for the project)
-├── main.py                # Main script that orchestrates the process
-├── fact_retrieval.py      # Module for retrieving and processing facts
-├── audio_processing.py    # Module for audio generation and processing
-├── visual_processing.py   # Module for selecting backgrounds and creating text overlays
-├── video_assembly.py      # Module for assembling, splicing, and saving the final video
-└── README.md              # This detailed documentation file
-
----
-
 ## Configuration
 
 The `config.json` file defines all adjustable parameters. Although JSON does not allow comments, below are explanations for each parameter:
