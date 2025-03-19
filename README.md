@@ -118,149 +118,147 @@ Example `config.json` (without comments):
   "fps": 24,
   "sample_background_url": "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4"
 }
+```
 
+## Modules and Their Responsibilities
 
+### `main.py`
+- **Role**: Orchestrates the entire workflow.
+- **Operations**:
+  - Loads configuration from `config.json` and applies command-line overrides
+  - Retrieves fact and extracts keywords
+  - Splits fact text into sentences (for background splicing)
+  - Generates voiceover
+  - Uses `get_background_clip` (from `visual_processing`) to select/download background clips per sentence
+  - Creates text overlays for each sentence
+  - Calls functions in `video_assembly.py` to splice clips, align with overlays/audio, and produce final video
+  - Saves final video to specified output directory
 
-⸻
+### `fact_retrieval.py`
+- **Role**: Retrieves facts from API and extracts keywords
+- **Functions**:
+  ```python
+  get_fact(api_url: str) -> str
+  extract_keywords(fact_text: str) -> list
+  ```
 
-Modules and Their Responsibilities
+### `audio_processing.py`
+- **Role**: Generates audio components
+- **Functions**:
+  ```python
+  generate_voiceover(text: str, lang: str, output_path: str, slow: bool) -> str
+  load_music(music_path: str, volume: float)
+  ```
 
-main.py
-	•	Role: Orchestrates the entire workflow.
-	•	Operations:
-	•	Loads configuration from config.json and applies command-line overrides.
-	•	Retrieves fact and extracts keywords.
-	•	Splits fact text into sentences (for background splicing).
-	•	Generates voiceover.
-	•	Uses get_background_clip (from visual_processing) to select or download background clips per sentence.
-	•	Creates text overlays for each sentence.
-	•	Calls functions in video_assembly.py to splice all background clips, align them with overlays and audio, and produce the final video.
-	•	Saves the final video to a specified output directory.
+### `visual_processing.py`
+- **Role**: Handles visual asset processing
+- **Functions**:
+  ```python
+  select_background(keywords: list, config: dict) -> str
+  get_background_clip(keywords: list, config: dict) -> str
+  create_text_clip(text: str, config: dict)
+  ```
+- **Note**: Extended functionality to dynamically download clips if needed
 
-fact_retrieval.py
-	•	Role: Retrieves a fact from an API and extracts thematic keywords.
-	•	Functions:
-	•	get_fact(api_url: str) -> str
-	•	extract_keywords(fact_text: str) -> list
+### `video_assembly.py`
+- **Role**: Assembles final video
+- **Functions**:
+  ```python
+  download_background_clip(keywords: list, config: dict) -> str
+  assemble_video(background_clip_path: str, text_clip, voiceover_path: str, music_file: str, config: dict)
+  save_video(video_clip, output_path: str, fps: int)
+  ```
+- **New Feature**: Supports splicing multiple background clips (one per sentence)
 
-audio_processing.py
-	•	Role: Generates audio components.
-	•	Functions:
-	•	generate_voiceover(text: str, lang: str, output_path: str, slow: bool) -> str
-	•	load_music(music_path: str, volume: float)
+---
 
-visual_processing.py
-	•	Role: Handles visual asset processing.
-	•	Functions:
-	•	select_background(keywords: list, config: dict) -> str
-	•	Note: In our new design, this function is now extended by get_background_clip to dynamically download clips if necessary.
-	•	get_background_clip(keywords: list, config: dict) -> str
-	•	create_text_clip(text: str, config: dict)
-	•	Additional Processing: (Potentially splitting the fact into sentences and matching each sentence to a clip – either done here or in main.py)
+## Dependencies
 
-video_assembly.py
-	•	Role: Assembles the final video.
-	•	Functions:
-	•	download_background_clip(keywords: list, config: dict) -> str
-	•	Downloads a stock video from the internet as a fallback.
-	•	assemble_video(background_clip_path: str, text_clip, voiceover_path: str, music_file: str, config: dict)
-	•	Layers the background clip, text overlay, voiceover, and music.
-	•	save_video(video_clip, output_path: str, fps: int)
-	•	New Addition: Ability to splice together multiple background clips corresponding to each sentence.
-	•	The main script should gather a list of background clip paths (one per sentence) and a list of corresponding text overlays, then call a new function (or extend assemble_video) to splice them together sequentially.
-
-⸻
-
-Dependencies
-
-The project depends on:
-	•	requests – for HTTP requests (fact retrieval and video downloads).
-	•	gTTS – for text-to-speech voiceover generation.
-	•	moviepy – for video editing, splicing, and assembly.
-	•	Pillow – for any image processing (if needed).
-	•	numpy – for randomization and numerical operations.
-	•	argparse – for command-line argument parsing.
-	•	Standard modules: os, json, random, tempfile.
-
-Install them via pip:
-
+```bash
 pip install requests gTTS moviepy Pillow numpy
+```
 
-Note: MoviePy requires FFmpeg to be installed and in your system PATH.
+**Required Packages**:
+- `requests` - HTTP requests
+- `gTTS` - Text-to-speech
+- `moviepy` - Video editing
+- `Pillow` - Image processing
+- `numpy` - Numerical operations
+- `argparse` - CLI parsing
 
-⸻
+**System Requirements**:
+- FFmpeg (must be in system PATH)
 
-Installation and Setup
-	1.	Clone the Repository:
-Download all files (main.py, fact_retrieval.py, audio_processing.py, visual_processing.py, video_assembly.py, config.json, etc.) into a project folder.
-	2.	Prepare Assets:
-	•	Create an assets folder with subfolders:
-	•	backgrounds/ for local background clips (optional; if absent or empty, fallback download is used).
-	•	music/ for background music files.
-	•	Place your desired stock video clips and music files accordingly.
-	3.	Configure the Project:
-	•	Edit config.json with your desired parameters.
-	•	Ensure file paths are correct relative to your project structure.
-	4.	Install Dependencies:
-Run the pip install command above. Also, ensure FFmpeg is installed and configured.
+---
 
-⸻
+## Installation & Setup
 
-Usage Instructions
-	•	Run the Main Script:
-In the terminal, navigate to your project root and run:
+1. **Clone Repository**:
+   ```bash
+   git clone [your-repository-url]
+   ```
 
+2. **Prepare Assets**:
+   ```bash
+   mkdir -p assets/{backgrounds,music}
+   ```
+
+3. **Configure Project**:
+   - Edit `config.json`
+   - Verify file paths match your project structure
+
+4. **Install Requirements**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## Usage
+
+**Basic Command**:
+```bash
 python main.py --config config.json --output_dir output --video_duration 30
+```
 
-This loads the configuration, retrieves the fact, processes audio and visuals, splices multiple background clips (if necessary) with text overlays, and assembles the final video.
+**Command-Line Overrides**:
+| Flag | Description |
+|------|-------------|
+| `--config` | Configuration file path |
+| `--output_dir` | Output directory |
+| `--video_duration` | Target video length |
 
-	•	Command-Line Overrides:
-Use argparse to override parameters (e.g., video duration) without modifying config.json.
-	•	Final Output:
-The generated video is saved in the specified output directory. Check logs (if implemented) for metadata.
+---
 
-⸻
+## Configuration
 
-Customization and Hyperparameters
-	•	Config File:
-All parameters (video duration, resolution, fonts, colors, volumes, etc.) are defined in config.json.
-	•	Inline Defaults:
-Each module defines its own default values at the top of functions for ease of tweaking.
-	•	Dynamic Adjustments:
-The system supports dynamic background selection and automatic downloads if local assets are missing.
-	•	Sentence-Level Matching:
-Future enhancements may include advanced NLP to precisely match each sentence with a specific video clip; the current design splits the fact text into sentences and allows splicing multiple clips accordingly.
+Edit `config.json` to control:
+- Video resolution
+- Font styles
+- Audio volumes
+- API endpoints
+- Fallback behaviors
 
-⸻
+---
 
-Troubleshooting
-	•	FileNotFoundError for Backgrounds Directory:
-Ensure that the directory specified in backgrounds_dir exists. If not, the system will automatically download a fallback video clip.
-	•	Empty Sequence Errors:
-If no background clips match the keywords in your local directory, the system falls back to downloading a default clip.
-	•	FFmpeg Issues:
-Verify that FFmpeg is installed and in your system PATH; MoviePy depends on FFmpeg for video processing.
-	•	Network/API Errors:
-Ensure your internet connection is stable for API calls and video downloads.
-	•	TTS Errors:
-Confirm that the language code is supported by gTTS and that the text is properly formatted.
+## Troubleshooting
 
-⸻
+**Common Issues**:
+- **Missing FFmpeg**: Install via system package manager
+- **Empty Backgrounds Directory**: System will auto-download clips
+- **API Errors**: Check internet connection and endpoint URLs
+- **TTS Failures**: Verify supported language codes
 
-Future Enhancements
-	•	Advanced Sentence Matching:
-Improve NLP to match each sentence more accurately with a corresponding thematic background clip.
-	•	Multiple Background Splicing:
-Develop a function to splice multiple background clips (one per sentence) seamlessly.
-	•	Enhanced Visual Effects:
-Add transitions, animations, and effects that further polish the video.
-	•	User Feedback Loop:
-Implement a mechanism for manual review or automated vetting of facts before video generation.
-	•	GUI for Configuration:
-Build a user-friendly interface to adjust settings and preview videos.
+---
 
-⸻
+## Future Roadmap
 
-License🦗
+- Advanced NLP sentence matching
+- Seamless multi-clip transitions
+- Dynamic visual effects
+- GUI configuration interface
 
-Lice 🦗
+---
+
+## License 🦗
+
