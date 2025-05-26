@@ -27,7 +27,7 @@ def main():
 
     # Load configuration from file
     config = load_config(config)
-
+    print("[CONFIG FILE LOADED]")
     # Override config parameters with any hyperparameters provided on the command line.
     if video_duration is not None:
         config['video_duration'] = video_duration
